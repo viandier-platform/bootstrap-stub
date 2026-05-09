@@ -7,7 +7,7 @@ Public stub for the Viandier bootstrap.
 ```bash
 export INFISICAL_CLIENT_ID=...
 export INFISICAL_CLIENT_SECRET=...
-curl -fsSL https://viandier.com/bootstrap | sudo -E bash -s -- --profile server
+curl -fsSL https://bootstrap.viandier.com | sudo -E bash -s -- --profile server
 ```
 
 Profile is one of `server` or `desktop`. Omit `--profile` to auto-detect.
