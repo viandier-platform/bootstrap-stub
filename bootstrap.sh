@@ -28,7 +28,7 @@ readonly GH_REPO="${GH_REPO:-bootstrap}"
 readonly GH_REF="${GH_REF:-main}"
 readonly SCRIPT_PATH_IN_REPO="${SCRIPT_PATH_IN_REPO:-scripts/ubuntu-harden.sh}"
 
-readonly STUB_VERSION="0.2.0"
+readonly STUB_VERSION="0.3.0"
 
 # -------- log helpers --------
 log()  { printf "\033[1;34m[stub]\033[0m %s\n" "$*" >&2; }
@@ -81,6 +81,20 @@ secret_response="$(curl -sS --fail --max-time 30 \
 
 gh_pat="$(echo "$secret_response" | jq -r '.secret.secretValue // empty')"
 [[ -n "$gh_pat" ]] || die "No secretValue in Infisical github_pat response"
+
+# -------- resolve git ref to sha --------
+log "Resolving ${GH_REF} to commit SHA"
+sha_response="$(curl -sS --fail --max-time 30 \
+  --header "Authorization: token ${gh_pat}" \
+  --header "Accept: application/vnd.github+json" \
+  --header "X-GitHub-Api-Version: 2022-11-28" \
+  "https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/commits/${GH_REF}" \
+  || die "Failed to resolve git ref to SHA")"
+
+HARDEN_VERSION="$(echo "$sha_response" | jq -r '.sha // "unknown"' | cut -c1-12)"
+[[ "$HARDEN_VERSION" != "unknown" ]] || die "Could not resolve SHA from GitHub API"
+export HARDEN_VERSION
+log "Using HARDEN_VERSION=${HARDEN_VERSION}"
 
 # -------- download whole repo as tarball --------
 log "Downloading repo tarball"
